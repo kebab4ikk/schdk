@@ -120,6 +120,20 @@ describe('marks and packs', () => {
   });
 });
 
+describe('board mode', () => {
+  it('shows the question on the display when entering board mode and on goto', () => {
+    let s = play([
+      { type: 'loadPack', title: 'P', questionCount: 3, questionTimes: [] },
+      { type: 'addTeams', names: ['A'], ids: ['a'] },
+    ]);
+    expect(s.displayView).toBe('logo');
+    s = reducer(s, { type: 'screen', screen: 'board' });
+    expect(s.displayView).toBe('question');
+    s = play([{ type: 'displayView', view: 'results' }, { type: 'goto', index: 1 }], s);
+    expect(s.displayView).toBe('question');
+  });
+});
+
 describe('parseSavedState', () => {
   it('round-trips and pauses a running timer', () => {
     const s = reducer(withPack(), { type: 'startPause', now: Date.now() });

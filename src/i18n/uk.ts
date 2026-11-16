@@ -36,6 +36,22 @@ export const uk = {
   'setup.needTeams': 'Додайте хоча б одну команду.',
   'setup.formatHelp': 'Формат пакета описано в README. Приклад — examples/sample-pack.json.',
 
+  'setup.board': 'Режим дошки (сенсорний екран)',
+  'setup.boardHint': 'Один екран для всіх: гра на весь екран із великими кнопками. Відповіді з’являються лише після «Відповідь», тож тримайте їх на папері чи телефоні.',
+
+  'board.controls': 'Керування',
+  'board.menu': 'Меню',
+  'board.sure': 'Точно?',
+  'board.answer': 'Відповідь',
+  'board.mark': 'Відмітити',
+  'board.next': 'Далі',
+  'board.done': 'Готово',
+  'board.fullscreen': 'На весь екран',
+  'board.exitFullscreen': 'Вийти з повноекранного',
+  'board.exit': 'Вийти в налаштування',
+  'board.goto': 'Перейти до питання',
+  'board.close': 'Закрити',
+
   'game.question': 'Питання {n}',
   'game.of': 'з {total}',
   'game.answer': 'Відповідь',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { initialState, parseSavedState, reducer, remainingAt, type Action, type GameState } from './game/state';
+import { initialState, isPlayScreen, parseSavedState, reducer, remainingAt, type Action, type GameState } from './game/state';
 import { flattenPack, type FlatQuestion, type Pack } from './pack/types';
 import { loadPackBytes, PackError, type PackIssue } from './pack/load';
 import { loadPackFile, savePackFile } from './pack/cache';
@@ -10,6 +10,7 @@ import { Display } from './display/Display';
 import { Setup } from './host/Setup';
 import { Game } from './host/Game';
 import { Results } from './host/Results';
+import { Board } from './host/Board';
 
 const STATE_KEY = 'schdk.state.v1';
 
@@ -145,7 +146,7 @@ export function App() {
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const s = stateRef.current;
-      if (s.screen !== 'game' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!isPlayScreen(s.screen) || e.ctrlKey || e.metaKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       const key = e.key;
@@ -194,6 +195,15 @@ export function App() {
   );
 
   const canPlay = !!pack && state.teams.length > 0;
+
+  if (state.screen === 'board' && current) {
+    return (
+      <>
+        <Board state={state} dispatch={dispatch} questions={questions} display={displayEl(!display.isOpen)} />
+        <DisplayPortal container={display.container}>{displayEl(true)}</DisplayPortal>
+      </>
+    );
+  }
 
   return (
     <div className="app">
@@ -246,7 +256,7 @@ export function App() {
       {state.screen === 'game' && current && (
         <Game state={state} dispatch={dispatch} questions={questions} now={now} preview={displayEl(!display.isOpen)} />
       )}
-      {state.screen === 'game' && !current && <div className="banner warn">{t('setup.needPack')}</div>}
+      {isPlayScreen(state.screen) && !current &&<div className="banner warn">{t('setup.needPack')}</div>}
       {state.screen === 'results' && <Results state={state} dispatch={dispatch} packTitle={packTitle} />}
 
       <DisplayPortal container={display.container}>{displayEl(true)}</DisplayPortal>

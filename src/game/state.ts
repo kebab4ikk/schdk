@@ -20,7 +20,11 @@ export type Phase =
   /** Answer revealed; the host marks correct teams. */
   | 'answer';
 
-export type Screen = 'setup' | 'game' | 'results';
+/** 'board' is the full-screen touch mode for a single interactive screen (smartboard). */
+export type Screen = 'setup' | 'game' | 'results' | 'board';
+
+/** Screens where a question is in play (keyboard shortcuts active, display shows the question). */
+export const isPlayScreen = (s: Screen) => s === 'game' || s === 'board';
 export type DisplayView = 'question' | 'results' | 'logo';
 
 export interface Settings {
@@ -126,7 +130,7 @@ function atQuestion(s: GameState, index: number, questionTime?: number): GameSta
     timer: freshTimer(s.settings, questionTime),
     showHandout: false,
     mediaPlaying: false,
-    displayView: s.screen === 'game' ? 'question' : s.displayView,
+    displayView: isPlayScreen(s.screen) ? 'question' : s.displayView,
   };
 }
 
@@ -190,7 +194,7 @@ export function reducer(s: GameState, a: Action): GameState {
     }
     case 'screen': {
       const next = { ...s, screen: a.screen };
-      if (a.screen === 'game' && s.displayView === 'logo') next.displayView = 'question';
+      if (isPlayScreen(a.screen) && s.displayView === 'logo') next.displayView = 'question';
       return next;
     }
     case 'goto': {

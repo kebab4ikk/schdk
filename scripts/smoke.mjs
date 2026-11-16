@@ -121,6 +121,52 @@ await img.waitFor();
 expectEq(await img.evaluate((el) => el.complete && el.naturalWidth), 4, 'ZIP image renders in the display window');
 expectEq(await page.locator('.q-dot').count(), 1, 'new pack replaced the old one');
 
+console.log('Board mode (touch screen)');
+const touch = await browser.newContext({ locale: 'uk-UA', viewport: { width: 1920, height: 1080 }, hasTouch: true });
+const board = await touch.newPage();
+board.on('pageerror', (e) => errors.push(String(e)));
+await board.goto(pathToFileURL(join(root, 'dist/index.html')).href);
+await board.setInputFiles('[data-testid=pack-input]', join(root, 'examples/sample-pack.json'));
+await board.getByText('2 тур(и), 6 питань').waitFor();
+await board.getByPlaceholder('Назва команди').fill('Сови');
+await board.keyboard.press('Enter');
+await board.getByPlaceholder('Назва команди').fill('Знавці');
+await board.keyboard.press('Enter');
+await board.getByLabel('Обговорення, секунд').fill('2');
+await board.getByLabel('Додатковий час на запис відповіді').uncheck();
+await board.getByRole('button', { name: /Режим дошки/ }).tap();
+await board.locator('.board').waitFor();
+const bodyText = () => board.locator('body').innerText();
+if ((await bodyText()).includes('Кава')) fail('answer visible on the board before reveal');
+console.log('  ✓ no answer on the board before reveal');
+
+// One tap on «Відповідь» only arms it; it must not reveal.
+await board.getByRole('button', { name: 'Відповідь' }).tap();
+await board.getByRole('button', { name: 'Точно?' }).waitFor();
+if ((await bodyText()).includes('Кава')) fail('single tap revealed the answer');
+console.log('  ✓ reveal needs a second tap');
+await board.screenshot({ path: join(out, '7-board-reading.png') });
+
+await board.getByRole('button', { name: /Старт/ }).tap();
+await board.getByText('Час!').waitFor({ timeout: 5000 });
+await board.locator('.b-main', { hasText: 'Відповідь' }).tap();
+expectEq(await board.locator('.answer-text').innerText(), 'Кава', 'answer revealed after time up');
+await board.getByRole('button', { name: /Відмітити/ }).tap();
+await board.locator('.sheet-teams button', { hasText: 'Знавці' }).tap();
+expectEq(await board.locator('.sheet-teams button.ok').count(), 1, 'team marked by touch');
+await board.screenshot({ path: join(out, '8-board-marking.png') });
+await board.getByRole('button', { name: 'Готово' }).tap();
+await board.getByRole('button', { name: /Далі/ }).tap();
+expectEq(await board.locator('.b-num').innerText().then((s) => s.split('\n')[0]), 'Питання 2', 'next question by touch');
+if ((await bodyText()).includes('Ейфелева')) fail('next answer visible before reveal');
+console.log('  ✓ next answer hidden');
+
+await board.getByRole('button', { name: 'Меню' }).tap();
+await board.getByRole('button', { name: /Таблиця/ }).tap();
+await board.locator('.display-results').waitFor();
+await board.screenshot({ path: join(out, '9-board-results.png') });
+console.log('  ✓ results table from the menu');
+
 await browser.close();
 if (errors.length) fail('console errors:\n' + errors.join('\n'));
 console.log(`\nSMOKE OK — screenshots in ${out}`);

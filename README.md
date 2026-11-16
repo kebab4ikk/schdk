@@ -18,6 +18,14 @@
    - → — наступне питання.
 4. **Результати:** таблиця з місцями; при рівній сумі вище команда з більшим **рейтингом** (за кожне взяте питання: кількість команд, що його не взяли, + 1). Можна показати на екрані (клавіша T) і завантажити CSV для Excel.
 
+### Сенсорна дошка (один екран)
+Якщо грають на інтерактивній дошці без окремого ноутбука, натисніть на налаштуваннях **«Режим дошки (сенсорний екран)»**. Гра відкриється на весь екран із великими кнопками внизу:
+- **▶ Старт** — таймер; **Відповідь** — показати відповідь (до кінця часу треба натиснути двічі, щоб не показати її випадково);
+- після відповіді — **Відмітити** (команди, що відповіли правильно), **Таблиця**, **Далі ▶**;
+- **☰** — меню: повний екран, таблиця/заставка, перехід до будь-якого питання, вихід у налаштування.
+
+На дошці відповідь ніде не видно до натискання «Відповідь», тож тримайте відповіді в себе на папері чи телефоні. Клавіатура теж працює.
+
 Гра зберігається автоматично: після перезавантаження сторінки або збою все відновиться. «Нова гра» очищає відмітки, але зберігає команди та пакет. Невдале питання можна «зняти» — воно не рахується.
 
 ### Клавіші (працюють в обох вікнах)
@@ -86,6 +94,8 @@
 2. Click **Open display**, drag the new window to the projector and **double-click** it for full screen. Allow pop-ups if the browser blocks it.
 3. **Game:** the host sees question, answer and comment; players see only the question, the timer and, once revealed, the answer. Space starts the timer, Enter reveals the answer, 1…9/0 mark correct teams, → goes to the next question.
 4. **Results:** places with a tie-break by **rating** (for each question a team answered: the number of teams that missed it + 1). Show it on the display (T) or download CSV.
+
+**Touch board (one screen):** on Setup, choose **Board mode (touch screen)**. The game runs full screen with large touch buttons (Start, Answer, Mark, Table, Next, and a ☰ menu). No answer is shown anywhere before you tap Answer (twice, if time isn't up yet), so keep the answers on paper or a phone.
 
 The game is saved automatically and survives a page reload. The interface language switches between Ukrainian and English in the top bar. The pack format is described above (fields are the same in both languages).
 

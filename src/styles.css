@@ -836,15 +836,175 @@ details summary {
   font-weight: 700;
 }
 
+/* ---------- Board mode (single touch screen) ---------- */
+.board {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--stage);
+  color: var(--stage-text);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.board-stage {
+  flex: 1;
+  min-height: 0;
+}
+.board button {
+  min-height: 60px;
+  min-width: 60px;
+  padding: 8px 20px;
+  font-size: 1.15rem;
+  border-radius: 12px;
+  background: #1c1f28;
+  border: 1px solid #343846;
+  color: var(--stage-text);
+}
+.board button:hover:not(:disabled) {
+  border-color: var(--stage-gold);
+}
+.board button.on {
+  border-color: var(--stage-gold);
+  color: var(--stage-gold);
+}
+.board button.b-main {
+  background: var(--stage-gold);
+  border-color: var(--stage-gold);
+  color: #17120a;
+  font-weight: 700;
+  min-width: 170px;
+}
+.board button.armed {
+  background: var(--stage-red);
+  border-color: var(--stage-red);
+  color: #fff;
+  font-weight: 700;
+}
+.board-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0e1016;
+  border-top: 1px solid #23262f;
+  overflow-x: auto;
+}
+.b-num {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  color: var(--stage-gold);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.b-num small {
+  font-weight: 400;
+  color: var(--stage-muted);
+  font-size: 0.85rem;
+}
+.b-spacer {
+  flex: 1;
+}
+.board-sheet {
+  position: absolute;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  width: min(1100px, calc(100% - 32px));
+  max-height: calc(100% - 120px);
+  overflow: auto;
+  background: #141720;
+  border: 1px solid #343846;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 60%);
+}
+.board-sheet h2,
+.board-sheet h3 {
+  color: var(--stage-gold);
+}
+.board-sheet h3 {
+  margin-top: 20px;
+}
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--stage-muted);
+}
+.sheet-teams {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.sheet-teams button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  min-height: 72px;
+  font-size: 1.25rem;
+}
+.sheet-teams .n {
+  color: var(--stage-muted);
+  min-width: 1.6em;
+}
+.sheet-teams .name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-teams .tick {
+  font-size: 1.6rem;
+  font-weight: 800;
+  width: 1em;
+}
+.sheet-teams button.ok {
+  background: #173826;
+  border-color: var(--stage-green);
+  color: #fff;
+}
+.sheet-teams button.ok .tick {
+  color: var(--stage-green);
+}
+.sheet-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sheet-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sheet-questions button {
+  min-width: 64px;
+  padding: 8px;
+}
+.sheet-questions button.played {
+  border-color: var(--stage-green);
+}
+.sheet-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 @keyframes pulse {
   50% {
     transform: scale(1.06);
   }
 }
+/* Movement only, no fade: if a browser throttles animations in a background window,
+   the answer must still be fully readable. */
 @keyframes rise {
   from {
-    opacity: 0;
-    transform: translateY(1.5cqh);
+    transform: translateY(1.5cqh) scale(0.96);
   }
 }
 @media (prefers-reduced-motion: reduce) {

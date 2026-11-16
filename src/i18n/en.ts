@@ -38,6 +38,22 @@ export const en: Record<MessageKey, string> = {
   'setup.needTeams': 'Add at least one team.',
   'setup.formatHelp': 'The pack format is described in the README. Example: examples/sample-pack.json.',
 
+  'setup.board': 'Board mode (touch screen)',
+  'setup.boardHint': 'One screen for everyone: the game runs full screen with large buttons. Answers appear only after “Answer”, so keep them on paper or a phone.',
+
+  'board.controls': 'Controls',
+  'board.menu': 'Menu',
+  'board.sure': 'Sure?',
+  'board.answer': 'Answer',
+  'board.mark': 'Mark',
+  'board.next': 'Next',
+  'board.done': 'Done',
+  'board.fullscreen': 'Full screen',
+  'board.exitFullscreen': 'Exit full screen',
+  'board.exit': 'Back to setup',
+  'board.goto': 'Go to question',
+  'board.close': 'Close',
+
   'game.question': 'Question {n}',
   'game.of': 'of {total}',
   'game.answer': 'Answer',

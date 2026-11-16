@@ -205,12 +205,24 @@ export function Setup({ state, dispatch, pack, packIssues, packLoading, onPackFi
           >
             ▶ {started ? t('setup.continue') : t('setup.start')}
           </button>
+          <button
+            className="big"
+            disabled={!canPlay}
+            onClick={() => {
+              signals.unlock();
+              void document.documentElement.requestFullscreen?.().catch(() => undefined);
+              dispatch({ type: 'screen', screen: 'board' });
+            }}
+          >
+            👆 {t('setup.board')}
+          </button>
           {started && (
             <button className="danger" onClick={() => confirm(t('setup.newGameConfirm')) && dispatch({ type: 'newGame' })}>
               {t('setup.newGame')}
             </button>
           )}
         </div>
+        <p className="hint">{t('setup.boardHint')}</p>
       </section>
     </main>
   );
