@@ -1,0 +1,60 @@
+name: Android app
+
+# Builds the tablet app (APK) with the web app inside, and publishes it as the
+# "android-latest" pre-release so it can be downloaded straight onto the tablet.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Test and build the web app
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build the APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease
+
+      - name: Collect the APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk schdk-host.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schdk-host-apk
+          path: schdk-host.apk
+
+      - name: Publish as the android-latest pre-release
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --cleanup-tag --yes || true
+          gh release create android-latest schdk-host.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "ЩДК Host — Android (latest build)" \
+            --notes "Built from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. Download schdk-host.apk on the tablet and open it to install."

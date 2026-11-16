@@ -20,10 +20,17 @@ export function Results({ state, dispatch, packTitle }: Props) {
       total: t('results.total'),
       rating: t('results.rating'),
     });
+    const fileName = `${(packTitle || 'schdk').replace(/[\\/:*?"<>|]+/g, '_')} — results.csv`;
+    // Inside the Android app, a WebView can't download blob: links; the app saves the file itself.
+    const android = (window as { SchdkAndroid?: { saveFile: (name: string, mime: string, text: string) => void } }).SchdkAndroid;
+    if (android) {
+      android.saveFile(fileName, 'text/csv', csv);
+      return;
+    }
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${(packTitle || 'schdk').replace(/[\\/:*?"<>|]+/g, '_')} — results.csv`;
+    a.download = fileName;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

@@ -1022,3 +1022,96 @@ details summary {
     margin-left: 0;
   }
 }
+
+/* ---------- Remote screen (Android app + smartboard) ---------- */
+button.ok {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+  color: var(--ok);
+  font-weight: 600;
+}
+.pill-ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 55%);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 50;
+}
+.modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  color: var(--text);
+}
+.remote-steps {
+  padding-left: 20px;
+  margin: 0 0 12px;
+}
+.remote-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin: 12px 0;
+}
+.remote-codes figure {
+  margin: 0;
+  text-align: center;
+}
+.qr {
+  width: 220px;
+  height: 220px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+}
+.qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.remote-url {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 8px;
+  user-select: all;
+  word-break: break-all;
+}
+.remote-display {
+  position: fixed;
+  inset: 0;
+  background: var(--stage);
+}
+.remote-start {
+  position: absolute;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  padding: 18px 32px;
+  min-height: 64px;
+  border-radius: 14px;
+  background: var(--stage-gold);
+  border: 0;
+  color: #17120a;
+  font-weight: 700;
+  box-shadow: 0 6px 30px rgb(0 0 0 / 50%);
+}
+.remote-offline {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--stage-red);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 1rem;
+}

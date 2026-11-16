@@ -4,6 +4,10 @@ import { flattenPack, type FlatQuestion, type Pack } from './pack/types';
 import { loadPackBytes, PackError, type PackIssue } from './pack/load';
 import { loadPackFile, savePackFile } from './pack/cache';
 import { signals } from './audio/signals';
+import { useSignals } from './audio/useSignals';
+import { buildDisplayModel } from './display/model';
+import { useRemoteScreen } from './remote/useRemoteScreen';
+import { RemoteLink } from './remote/RemoteLink';
 import { useI18n } from './i18n';
 import { DisplayPortal, useDisplayWindow } from './display/DisplayWindow';
 import { Display } from './display/Display';
@@ -115,31 +119,6 @@ export function App() {
     if (state.timer.running) rawDispatch({ type: 'tick', now });
   }, [now, state.timer.running]);
 
-  // Sound signals on phase changes, and once at 10 seconds left.
-  const prevPhase = useRef(state.phase);
-  const warned = useRef<string | null>(null);
-  useEffect(() => {
-    const prev = prevPhase.current;
-    prevPhase.current = state.phase;
-    if (!state.settings.sound || prev === state.phase) return;
-    if (prev === 'reading' && state.phase === 'timer') signals.start();
-    else if (prev === 'timer' && (state.phase === 'writing' || state.phase === 'timeup')) signals.end();
-    else if (prev === 'writing' && state.phase === 'timeup') signals.writingEnd();
-  }, [state.phase, state.settings.sound]);
-  const remaining = remainingAt(state.timer, now);
-  useEffect(() => {
-    if (state.phase !== 'timer' || !state.timer.running) return;
-    const key = `${state.current}`;
-    const full = (qTime ?? state.settings.seconds) * 1000;
-    if (remaining <= 10_000 && remaining > 0 && full > 15_000 && warned.current !== key) {
-      warned.current = key;
-      if (state.settings.sound) signals.warning();
-    }
-  }, [remaining, state.phase, state.timer.running, state.current, state.settings, qTime]);
-  useEffect(() => {
-    if (state.phase === 'reading') warned.current = null;
-  }, [state.phase, state.current]);
-
   // Keyboard shortcuts, shared by the host and display windows.
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -180,26 +159,47 @@ export function App() {
   const packTitle = pack?.pack.title || pack?.fileName || state.packTitle || '';
   const display = useDisplayWindow(onKeyDown, `${t('app.title')} — ${packTitle}`);
 
-  const displayEl = useMemo(
-    () => (playsMedia: boolean) => (
-      <Display
-        state={state}
-        questions={questions}
-        packTitle={packTitle}
-        packDate={pack?.pack.date}
-        now={now}
-        playsMedia={playsMedia}
-      />
-    ),
-    [state, questions, packTitle, pack, now],
+  const packDate = pack?.pack.date;
+  const getModel = useCallback(
+    () => buildDisplayModel(state, questions, packTitle, packDate, Date.now()),
+    [state, questions, packTitle, packDate],
   );
+  const model = useMemo(() => getModel(), [getModel]);
+  const remaining = remainingAt(state.timer, now);
+
+  // The smartboard, when this page runs inside the Android app.
+  const remote = useRemoteScreen(getModel, lang, getModel);
+  const [showLink, setShowLink] = useState(false);
+
+  // Beeps come from the board when one is connected (it has the room's speakers).
+  useSignals({
+    enabled: state.settings.sound && remote.displays === 0,
+    phase: state.phase,
+    running: state.timer.running,
+    remainingMs: remaining,
+    mainSeconds: qTime ?? state.settings.seconds,
+    questionKey: model.questionKey,
+  });
+
+  const displayEl = useMemo(
+    () => (playsMedia: boolean) => <Display model={model} remainingMs={remaining} playsMedia={playsMedia} />,
+    [model, remaining],
+  );
+  const linkModal = showLink && <RemoteLink remote={remote} onClose={() => setShowLink(false)} />;
 
   const canPlay = !!pack && state.teams.length > 0;
 
   if (state.screen === 'board' && current) {
     return (
       <>
-        <Board state={state} dispatch={dispatch} questions={questions} display={displayEl(!display.isOpen)} />
+        <Board
+          state={state}
+          dispatch={dispatch}
+          questions={questions}
+          display={displayEl(!display.isOpen && remote.displays === 0)}
+          onShowLink={remote.available ? () => setShowLink(true) : undefined}
+        />
+        {linkModal}
         <DisplayPortal container={display.container}>{displayEl(true)}</DisplayPortal>
       </>
     );
@@ -228,7 +228,12 @@ export function App() {
           ))}
         </nav>
         <div className="topbar-actions">
-          {display.isOpen ? (
+          {remote.available && (
+            <button className={remote.displays > 0 ? 'ok' : 'primary'} onClick={() => setShowLink(true)} data-testid="remote-button">
+              📺 {remote.displays > 0 ? t('remote.connected', { n: remote.displays }) : t('remote.connect')}
+            </button>
+          )}
+          {remote.available ? null : display.isOpen ? (
             <button onClick={display.close}>{t('display.close')}</button>
           ) : (
             <button className="primary" onClick={display.open}>
@@ -241,6 +246,7 @@ export function App() {
         </div>
       </header>
       {display.blocked && <div className="banner warn">{t('display.blocked')}</div>}
+      {linkModal}
 
       {state.screen === 'setup' && (
         <Setup
@@ -254,7 +260,7 @@ export function App() {
         />
       )}
       {state.screen === 'game' && current && (
-        <Game state={state} dispatch={dispatch} questions={questions} now={now} preview={displayEl(!display.isOpen)} />
+        <Game state={state} dispatch={dispatch} questions={questions} now={now} preview={displayEl(!display.isOpen && remote.displays === 0)} />
       )}
       {isPlayScreen(state.screen) && !current &&<div className="banner warn">{t('setup.needPack')}</div>}
       {state.screen === 'results' && <Results state={state} dispatch={dispatch} packTitle={packTitle} />}

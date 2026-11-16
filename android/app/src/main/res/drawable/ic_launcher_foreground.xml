@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A gold question mark in a gold ring, like the app's logo. 108dp canvas, 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,25 a29,29 0 1,0 0.01,0 z"
+        android:strokeWidth="3"
+        android:strokeColor="#E7B53C" />
+    <path
+        android:pathData="M44,46 a10,10 0 1,1 15,8.7 c-3.2,1.9 -5,3.8 -5,7.6 v2.2"
+        android:strokeWidth="6.5"
+        android:strokeColor="#E7B53C"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#E7B53C"
+        android:pathData="M54,71.5 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

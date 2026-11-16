@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.schdk.host'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.schdk.host'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    // One fixed key in the repo, so a new APK installs over the old one and keeps the saved game.
+    // It is not a secret: anyone with the repo can sign builds with it.
+    signingConfigs {
+        shared {
+            storeFile file('../schdk.keystore')
+            storePassword 'schdk-host'
+            keyAlias 'schdk'
+            keyPassword 'schdk-host'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.shared
+        }
+        release {
+            signingConfig signingConfigs.shared
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+    }
+
+    // The web app (dist/index.html from `npm run build`) is packed into the APK's assets.
+    sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('webapp').get().asFile
+}
+
+def webAppFile = rootProject.file('../dist/index.html')
+
+tasks.register('copyWebApp', Copy) {
+    doFirst {
+        if (!webAppFile.exists()) {
+            throw new GradleException("Missing ${webAppFile}. Run `npm install && npm run build` in the repository root first.")
+        }
+    }
+    from webAppFile
+    into layout.buildDirectory.dir('webapp')
+}
+
+tasks.named('preBuild') {
+    dependsOn 'copyWebApp'
+}

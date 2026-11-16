@@ -10,6 +10,8 @@ interface Props {
   questions: FlatQuestion[];
   /** The players' view, rendered by the caller. */
   display: ReactNode;
+  /** Shows how to connect a smartboard; only inside the Android app. */
+  onShowLink?: () => void;
 }
 
 /**
@@ -17,7 +19,7 @@ interface Props {
  * this screen, so nothing here may show an answer before it is revealed: the host keeps the
  * answers on paper or a phone, and marks teams only after the reveal.
  */
-export function Board({ state, dispatch, questions, display }: Props) {
+export function Board({ state, dispatch, questions, display, onShowLink }: Props) {
   const { t } = useI18n();
   const [sheet, setSheet] = useState<'none' | 'menu' | 'teams'>('none');
   const [armed, setArmed] = useState<string | null>(null);
@@ -178,6 +180,16 @@ export function Board({ state, dispatch, questions, display }: Props) {
           </div>
           <div className="sheet-menu">
             <button onClick={toggleFullscreen}>{isFull ? t('board.exitFullscreen') : t('board.fullscreen')}</button>
+            {onShowLink && (
+              <button
+                onClick={() => {
+                  setSheet('none');
+                  onShowLink();
+                }}
+              >
+                📺 {t('remote.connect')}
+              </button>
+            )}
             {(['question', 'results', 'logo'] as const).map((v) => (
               <button
                 key={v}

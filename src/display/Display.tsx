@@ -1,15 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FlatQuestion, Media } from '../pack/types';
-import { remainingAt, type GameState } from '../game/state';
-import { standings } from '../game/scoring';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import type { MediaType } from '../pack/types';
+import type { DisplayModel } from './model';
 import { useI18n } from '../i18n';
 
 interface Props {
-  state: GameState;
-  questions: FlatQuestion[];
-  packTitle: string;
-  packDate?: string;
-  now: number;
+  model: DisplayModel;
+  /** Remaining ms of the countdown, computed by the caller (locally or from a remote snapshot). */
+  remainingMs: number;
   /** Whether this copy plays audio/video (only one copy should, to avoid double sound). */
   playsMedia: boolean;
 }
@@ -30,11 +27,12 @@ function textSizeClass(text: string): string {
   return 'size-s';
 }
 
-export function Display({ state, questions, packTitle, packDate, now, playsMedia }: Props) {
+export function Display({ model, remainingMs, playsMedia }: Props) {
   const { t } = useI18n();
-  const q = questions[state.current];
+  const q = model.question;
+  const { packTitle, packDate } = model;
 
-  if (state.displayView === 'logo' || !q) {
+  if (model.view === 'logo' || !q) {
     return (
       <div className="display">
         <div className="display-logo">
@@ -47,44 +45,46 @@ export function Display({ state, questions, packTitle, packDate, now, playsMedia
     );
   }
 
-  if (state.displayView === 'results') return <DisplayResults state={state} />;
+  if (model.view === 'results') return <DisplayResults rows={model.results} />;
 
-  const revealed = state.phase === 'answer';
-  const remaining = remainingAt(state.timer, now);
-  const showTimer = state.phase === 'timer' || state.phase === 'writing' || state.phase === 'timeup';
+  const r = q.reveal;
+  const revealed = !!r;
+  const phase = model.phase;
+  const remaining = remainingMs;
+  const showTimer = phase === 'timer' || phase === 'writing' || phase === 'timeup';
 
   return (
-    <div className={`display phase-${state.phase}`}>
+    <div className={`display phase-${phase}`}>
       <header className="display-head">
         <span className="display-number">{t('game.question', { n: q.number })}</span>
         {q.tourTitle && <span className="display-tour">{q.tourTitle}</span>}
       </header>
 
       <main className={`display-main ${revealed ? 'with-answer' : ''}`}>
-        {q.media && <MediaView media={q.media} playing={state.mediaPlaying} active={playsMedia} />}
-        {state.showHandout && q.handout && <div className="display-handout">{q.handout}</div>}
+        {q.media && <MediaView media={q.media} playing={model.mediaPlaying} active={playsMedia} />}
+        {q.handout && <div className="display-handout">{q.handout}</div>}
         {q.text && <div className={`display-text ${revealed ? 'size-s' : textSizeClass(q.text)}`}>{q.text}</div>}
 
-        {revealed && (
+        {r && (
           <section className="display-answer">
             <div className="answer-label">{t('game.answer')}</div>
-            <div className="answer-text">{q.answer}</div>
-            {q.accepted && (
+            <div className="answer-text">{r.answer}</div>
+            {r.accepted && (
               <div className="answer-extra">
-                <b>{t('game.accepted')}:</b> {q.accepted.join('; ')}
+                <b>{t('game.accepted')}:</b> {r.accepted.join('; ')}
               </div>
             )}
-            {q.comment && <div className="answer-extra">{q.comment}</div>}
-            {(q.source || q.author) && (
+            {r.comment && <div className="answer-extra">{r.comment}</div>}
+            {(r.source || r.author) && (
               <div className="answer-meta">
-                {q.source && (
+                {r.source && (
                   <span>
-                    {t('game.source')}: {q.source}
+                    {t('game.source')}: {r.source}
                   </span>
                 )}
-                {q.author && (
+                {r.author && (
                   <span>
-                    {t('game.author')}: {q.author}
+                    {t('game.author')}: {r.author}
                   </span>
                 )}
               </div>
@@ -95,14 +95,14 @@ export function Display({ state, questions, packTitle, packDate, now, playsMedia
 
       {showTimer && (
         <footer className="display-timer">
-          {state.phase === 'timeup' ? (
+          {phase === 'timeup' ? (
             <span className="timer-big timeup">{t('display.timeup')}</span>
           ) : (
             <>
-              <span className={`timer-big ${state.phase === 'writing' ? 'writing' : remaining <= 10_000 ? 'warn' : ''}`}>
+              <span className={`timer-big ${phase === 'writing' ? 'writing' : remaining <= 10_000 ? 'warn' : ''}`}>
                 {formatTime(remaining)}
               </span>
-              {state.phase === 'writing' && <span className="timer-label">{t('display.writing')}</span>}
+              {phase === 'writing' && <span className="timer-label">{t('display.writing')}</span>}
             </>
           )}
         </footer>
@@ -111,7 +111,7 @@ export function Display({ state, questions, packTitle, packDate, now, playsMedia
   );
 }
 
-function MediaView({ media, playing, active }: { media: Media; playing: boolean; active: boolean }) {
+function MediaView({ media, playing, active }: { media: { type: MediaType; src: string }; playing: boolean; active: boolean }) {
   const ref = useRef<HTMLMediaElement>(null);
   const [muted, setMuted] = useState(false);
 
@@ -135,7 +135,7 @@ function MediaView({ media, playing, active }: { media: Media; playing: boolean;
   if (media.type === 'video') {
     return (
       <div className="display-media-wrap">
-        <video ref={ref as React.RefObject<HTMLVideoElement>} className="display-media" src={media.src} playsInline muted={!active} />
+        <video ref={ref as RefObject<HTMLVideoElement>} className="display-media" src={media.src} playsInline muted={!active} />
         {muted && <span className="media-muted">🔇</span>}
       </div>
     );
@@ -143,14 +143,13 @@ function MediaView({ media, playing, active }: { media: Media; playing: boolean;
   return (
     <div className={`display-audio ${playing ? 'playing' : ''}`}>
       <span aria-hidden>{playing ? '🔊' : '🎵'}</span>
-      <audio ref={ref as React.RefObject<HTMLAudioElement>} src={media.src} />
+      <audio ref={ref as RefObject<HTMLAudioElement>} src={media.src} />
     </div>
   );
 }
 
-function DisplayResults({ state }: { state: GameState }) {
+function DisplayResults({ rows }: { rows: DisplayModel['results'] }) {
   const { t } = useI18n();
-  const rows = standings(state);
   // Split long tables into two columns so up to ~40 teams fit on one screen.
   const split = rows.length > 16 ? Math.ceil(rows.length / 2) : rows.length;
   const cols = split < rows.length ? [rows.slice(0, split), rows.slice(split)] : [rows];
@@ -170,9 +169,9 @@ function DisplayResults({ state }: { state: GameState }) {
             </thead>
             <tbody>
               {col.map((r) => (
-                <tr key={r.team.id} className={r.placeNumber <= 3 ? `top top-${r.placeNumber}` : ''}>
+                <tr key={r.id} className={r.placeNumber <= 3 ? `top top-${r.placeNumber}` : ''}>
                   <td>{r.place}</td>
-                  <td className="team">{r.team.name}</td>
+                  <td className="team">{r.name}</td>
                   <td className="total">{r.total}</td>
                   <td>{r.rating}</td>
                 </tr>

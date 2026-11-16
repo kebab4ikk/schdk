@@ -26,6 +26,18 @@
 
 На дошці відповідь ніде не видно до натискання «Відповідь», тож тримайте відповіді в себе на папері чи телефоні. Клавіатура теж працює.
 
+### Планшет (Android) + дошка
+Ведучий тримає планшет із відповідями, а дошка показує гравцям лише питання, таймер і (після показу) відповідь.
+
+1. **Встановлення на планшет:** на сторінці репозиторію відкрийте *Releases → android-latest* і завантажте `schdk-host.apk`. Відкрийте файл і дозвольте встановлення з цього джерела (Android запитає один раз).
+2. Планшет і дошка мають бути в **одній Wi-Fi мережі**. Якщо Wi-Fi немає, увімкніть на планшеті **точку доступу** й підключіть до неї дошку (інтернет не потрібен).
+3. Відкрийте застосунок **ЩДК Host** на планшеті, завантажте пакет і команди, натисніть **«📺 Підключити дошку»**.
+4. На дошці відкрийте браузер і введіть показану адресу (на кшталт `http://192.168.1.23:8765/display`). Торкніться екрана дошки один раз — увімкнуться звук і повний екран.
+5. Ведіть гру з планшета як звичайно. Сигнали таймера звучать з дошки.
+
+Не закривайте застосунок під час гри: дошка отримує все саме від нього. Якщо зв’язок перерветься, дошка перепідключиться сама.
+Пакет питань не передається на дошку — вона отримує лише те, що гравці мають бачити в цю мить.
+
 Гра зберігається автоматично: після перезавантаження сторінки або збою все відновиться. «Нова гра» очищає відмітки, але зберігає команди та пакет. Невдале питання можна «зняти» — воно не рахується.
 
 ### Клавіші (працюють в обох вікнах)
@@ -97,8 +109,12 @@
 
 **Touch board (one screen):** on Setup, choose **Board mode (touch screen)**. The game runs full screen with large touch buttons (Start, Answer, Mark, Table, Next, and a ☰ menu). No answer is shown anywhere before you tap Answer (twice, if time isn't up yet), so keep the answers on paper or a phone.
 
+**Android tablet + board:** install `schdk-host.apk` from *Releases → android-latest* on the tablet. Put the tablet and the board on the same Wi-Fi (or connect the board to the tablet's hotspot), open the app, tap **Connect board** and open the shown address (e.g. `http://192.168.1.23:8765/display`) in the board's browser. Tap the board once to enable sound and full screen. The host runs the game on the tablet; the board only ever receives what players may see at that moment, never the pack. Keep the app open during the game.
+
 The game is saved automatically and survives a page reload. The interface language switches between Ukrainian and English in the top bar. The pack format is described above (fields are the same in both languages).
 
 ### Development
 - `npm test` — unit tests (pack loading, timer state machine, scoring).
 - `npm run build && npm run smoke` — runs the built `dist/index.html` from `file://` in Chromium via Playwright and plays through a short game.
+- `npm run build && npm run smoke:remote` — starts the Android app's screen server (`android/app/src/main/java/app/schdk/host/ScreenServer.java`) on a desktop JVM and plays a game with a "tablet" page and a "board" page over the network.
+- `android/` — the tablet app: a WebView around the web app plus the screen server. `.github/workflows/android.yml` builds the APK (`cd android && ./gradlew assembleRelease` after `npm run build`; needs the Android SDK) and publishes it as the `android-latest` pre-release. The signing key `android/schdk.keystore` is committed on purpose so updates install over the previous version; it is not a secret.
