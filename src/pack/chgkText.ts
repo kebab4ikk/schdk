@@ -65,7 +65,7 @@ function labelOf(line: string): { field: Field; rest: string } | null {
 export function joinLines(lines: string[]): string {
   let out = '';
   for (const raw of lines) {
-    const line = raw.trim();
+    const line = raw.trim().replace(/[ \t]{2,}/g, ' ');
     if (!line) continue;
     if (!out) {
       out = line;

@@ -38,7 +38,7 @@ export function Setup({ state, dispatch, pack, packIssues, packLoading, onPackFi
           <input
             ref={fileRef}
             type="file"
-            accept=".json,.zip,.txt,application/json,application/zip,text/plain"
+            accept=".odt,.txt,.json,.zip,application/vnd.oasis.opendocument.text,application/json,application/zip,text/plain"
             hidden
             data-testid="pack-input"
             onChange={(e) => {

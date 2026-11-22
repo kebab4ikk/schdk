@@ -9,7 +9,7 @@ export const en: Record<MessageKey, string> = {
   'nav.results': 'Results',
 
   'setup.pack': 'Question pack',
-  'setup.loadPack': 'Load pack (.json, .zip or .txt)',
+  'setup.loadPack': 'Load pack (.odt, .txt, .json or .zip)',
   'setup.loading': 'Loading…',
   'setup.noPack': 'No pack loaded.',
   'setup.packInfo': '{tours} round(s), {questions} questions',
@@ -154,5 +154,6 @@ export const en: Record<MessageKey, string> = {
   'err.badJson': 'JSON error: {msg}',
   'err.badZip': 'Could not open the ZIP archive.',
   'err.zipNoJson': 'The ZIP archive has no pack.json.',
+  'err.notChgkText': 'No questions found. Expected the “Запитання 1.” … “Відповідь: …” layout.',
   'err.unknown': 'Could not load the pack: {msg}',
 };

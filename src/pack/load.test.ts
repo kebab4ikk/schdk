@@ -112,8 +112,10 @@ describe('ZIP packs', () => {
   it('reports missing media and a missing pack.json', async () => {
     const missing = await zipOf({ 'pack.json': JSON.stringify({ questions: [{ text: 't', answer: 'a', media: { type: 'image', src: 'nope.png' } }] }) });
     expect(await issuesOf(loadPackBytes(missing, fakeUrl))).toEqual(['err.missingMedia']);
-    const noJson = await zipOf({ 'readme.txt': 'hi' });
-    expect(await issuesOf(loadPackBytes(noJson, fakeUrl))).toEqual(['err.zipNoJson']);
+    const notPack = await zipOf({ 'readme.txt': 'hi' });
+    expect(await issuesOf(loadPackBytes(notPack, fakeUrl))).toEqual(['err.notChgkText']);
+    const empty = await zipOf({ 'photo.png': new Uint8Array([1]) });
+    expect(await issuesOf(loadPackBytes(empty, fakeUrl))).toEqual(['err.zipNoJson']);
   });
 
   it('reports a corrupt zip', async () => {

@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import type { Media, MediaType, Pack, Question, Tour } from './types';
 import { looksLikeChgkText, parseChgkText } from './chgkText';
+import { odtContentToLines } from './odt';
 
 /** A validation problem, as an i18n key plus parameters, so the UI can show it in either language. */
 export interface PackIssue {
@@ -159,15 +160,37 @@ async function loadZip(data: ArrayBuffer | Uint8Array, createUrl: (blob: Blob) =
     throw new PackError([{ key: 'err.badZip' }]);
   }
   const files = Object.values(zip.files).filter((f) => !f.dir && !f.name.startsWith('__MACOSX/'));
+  const shallowest = (list: JSZip.JSZipObject[]) => [...list].sort((a, b) => a.name.split('/').length - b.name.split('/').length)[0];
   const jsons = files.filter((f) => f.name.toLowerCase().endsWith('.json'));
-  // Prefer pack.json; otherwise the shallowest JSON file.
-  const packFile =
-    jsons.find((f) => f.name.split('/').pop()?.toLowerCase() === 'pack.json') ??
-    jsons.sort((a, b) => a.name.split('/').length - b.name.split('/').length)[0];
-  if (!packFile) throw new PackError([{ key: 'err.zipNoJson' }]);
+  const texts = files.filter((f) => f.name.toLowerCase().endsWith('.txt'));
+  const odtContent = zip.file('content.xml');
 
-  const baseDir = packFile.name.includes('/') ? packFile.name.slice(0, packFile.name.lastIndexOf('/') + 1) : '';
-  const raw = parseJsonText(await packFile.async('string'));
+  let raw: unknown;
+  let baseDir = '';
+  if (odtContent && !jsons.length) {
+    // An OpenDocument text file (.odt) is a ZIP too: read its text, pictures come from Pictures/.
+    const text = odtContentToLines(await odtContent.async('string')).join('\n');
+    if (!looksLikeChgkText(text)) throw new PackError([{ key: 'err.notChgkText' }]);
+    const parsed = parseChgkText(text);
+    // The document title (File → Properties in LibreOffice) names the pack, if set.
+    const meta = await zip.file('meta.xml')?.async('string');
+    const title = meta && /<dc:title>([^<]*)<\/dc:title>/.exec(meta)?.[1]?.trim();
+    raw = title ? { ...parsed, title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>') } : parsed;
+  } else if (jsons.length) {
+    // Prefer pack.json; otherwise the shallowest JSON file.
+    const packFile = jsons.find((f) => f.name.split('/').pop()?.toLowerCase() === 'pack.json') ?? shallowest(jsons);
+    baseDir = packFile.name.includes('/') ? packFile.name.slice(0, packFile.name.lastIndexOf('/') + 1) : '';
+    raw = parseJsonText(await packFile.async('string'));
+  } else if (texts.length) {
+    // A text pack with its media next to it.
+    const textFile = shallowest(texts);
+    baseDir = textFile.name.includes('/') ? textFile.name.slice(0, textFile.name.lastIndexOf('/') + 1) : '';
+    const text = await textFile.async('string');
+    if (!looksLikeChgkText(text)) throw new PackError([{ key: 'err.notChgkText' }]);
+    raw = parseChgkText(text);
+  } else {
+    throw new PackError([{ key: 'err.zipNoJson' }]);
+  }
 
   // Collect referenced media first, then extract only those.
   const wanted = new Set<string>();
@@ -224,7 +247,8 @@ export async function loadPackBytes(
   if (isZipBytes(bytes)) return loadZip(bytes, createUrl);
   const text = new TextDecoder('utf-8').decode(bytes);
   // Not JSON: try the usual ЧГК text layout ("Запитання 1." / "Відповідь:" …).
-  if (!/^\uFEFF?\s*[[{]/.test(text) && looksLikeChgkText(text)) {
+  if (!/^\uFEFF?\s*[[{]/.test(text)) {
+    if (!looksLikeChgkText(text)) throw new PackError([{ key: 'err.notChgkText' }]);
     return { pack: validatePack(parseChgkText(text), () => null), objectUrls: [] };
   }
   const raw = parseJsonText(text);

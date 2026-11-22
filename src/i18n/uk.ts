@@ -7,7 +7,7 @@ export const uk = {
   'nav.results': 'Результати',
 
   'setup.pack': 'Пакет питань',
-  'setup.loadPack': 'Завантажити пакет (.json, .zip або .txt)',
+  'setup.loadPack': 'Завантажити пакет (.odt, .txt, .json або .zip)',
   'setup.loading': 'Завантаження…',
   'setup.noPack': 'Пакет не завантажено.',
   'setup.packInfo': '{tours} тур(и), {questions} питань',
@@ -152,6 +152,7 @@ export const uk = {
   'err.badJson': 'Помилка JSON: {msg}',
   'err.badZip': 'Не вдалося відкрити ZIP-архів.',
   'err.zipNoJson': 'У ZIP-архіві немає файлу pack.json.',
+  'err.notChgkText': 'Не вдалося знайти запитання. Очікується формат «Запитання 1.» … «Відповідь: …».',
   'err.unknown': 'Не вдалося завантажити пакет: {msg}',
 };
 
