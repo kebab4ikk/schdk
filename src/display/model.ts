@@ -17,7 +17,14 @@ export interface DisplayModel {
     handout?: string;
     media?: { type: MediaType; src: string };
     /** Present only once the answer is revealed. */
-    reveal?: { answer: string; accepted?: string[]; comment?: string; source?: string; author?: string };
+    reveal?: {
+      answer: string;
+      accepted?: string[];
+      comment?: string;
+      source?: string;
+      author?: string;
+      media?: { type: MediaType; src: string };
+    };
   };
   phase: Phase;
   timer: { running: boolean; remainingMs: number };
@@ -28,6 +35,20 @@ export interface DisplayModel {
   mainSeconds: number;
   /** Changes with every question, to reset per-question effects (sound warning) on the screen. */
   questionKey: string;
+}
+
+/**
+ * Removes reader's notes in square brackets ("IT-фахівець [айті-фахівець]", "[Ведучим: …]"):
+ * in ЧГК packs they are for whoever reads aloud, never for the players' screen.
+ */
+export function forPlayers(text: string): string;
+export function forPlayers(text: string | undefined): string | undefined;
+export function forPlayers(text: string | undefined): string | undefined {
+  if (text === undefined) return undefined;
+  return text
+    .replace(/\s*\[[^\]\n]*\]/g, '')
+    .replace(/[ \t]+([,.;:!?…»)])/g, '$1')
+    .trim();
 }
 
 export function buildDisplayModel(
@@ -46,11 +67,18 @@ export function buildDisplayModel(
     question: q && {
       number: q.number,
       tourTitle: q.tourTitle,
-      text: q.text,
+      text: forPlayers(q.text),
       handout: state.showHandout ? q.handout : undefined,
       media: q.media && { type: q.media.type, src: q.media.src },
       reveal: revealed
-        ? { answer: q.answer, accepted: q.accepted, comment: q.comment, source: q.source, author: q.author }
+        ? {
+            answer: forPlayers(q.answer),
+            accepted: q.accepted?.map((a) => forPlayers(a)),
+            comment: forPlayers(q.comment),
+            source: q.source,
+            author: q.author,
+            media: q.answerMedia && { type: q.answerMedia.type, src: q.answerMedia.src },
+          }
         : undefined,
     },
     phase: state.phase,

@@ -52,6 +52,12 @@ export function Game({ state, dispatch, questions, now, preview }: Props) {
             </button>
           </div>
         )}
+        {q.hostNote && (
+          <div className="q-hostnote">
+            <div className="label">{t('game.hostNote')}</div>
+            <div>{q.hostNote}</div>
+          </div>
+        )}
         <p className="q-text">{q.text}</p>
 
         <div className="q-answer">
@@ -67,8 +73,10 @@ export function Game({ state, dispatch, questions, now, preview }: Props) {
               <b>{t('game.comment')}:</b> {q.comment}
             </div>
           )}
+          {q.answerMedia?.type === 'image' && <img className="q-answer-media" src={q.answerMedia.src} alt="" />}
+          {q.answerMedia && q.answerMedia.type !== 'image' && <div className="muted">🎬 {t('game.answerMediaNote')}</div>}
           {q.source && (
-            <div className="muted">
+            <div className="muted pre-line">
               {t('game.source')}: {q.source}
             </div>
           )}

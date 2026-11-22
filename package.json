@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "smoke": "node scripts/smoke.mjs",
-    "smoke:remote": "node scripts/smoke-remote.mjs"
+    "smoke:remote": "node scripts/smoke-remote.mjs",
+    "pack:text": "vite-node scripts/text-to-pack.ts"
   },
   "dependencies": {
     "jszip": "^3.10.1",

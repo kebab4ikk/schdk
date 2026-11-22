@@ -38,7 +38,7 @@ export function Setup({ state, dispatch, pack, packIssues, packLoading, onPackFi
           <input
             ref={fileRef}
             type="file"
-            accept=".json,.zip,application/json,application/zip"
+            accept=".json,.zip,.txt,application/json,application/zip,text/plain"
             hidden
             data-testid="pack-input"
             onChange={(e) => {
@@ -57,6 +57,12 @@ export function Setup({ state, dispatch, pack, packIssues, packLoading, onPackFi
               {pack.pack.author && <> · {t('setup.packBy', { author: pack.pack.author })}</>}
               {pack.pack.date && <> · {pack.pack.date}</>}
             </div>
+            {pack.pack.notes && (
+              <details className="pack-notes">
+                <summary>{t('setup.packNotes')}</summary>
+                <div className="pre-line">{pack.pack.notes}</div>
+              </details>
+            )}
           </div>
         ) : (
           !packLoading && (

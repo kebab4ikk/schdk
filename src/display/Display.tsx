@@ -61,7 +61,7 @@ export function Display({ model, remainingMs, playsMedia }: Props) {
       </header>
 
       <main className={`display-main ${revealed ? 'with-answer' : ''}`}>
-        {q.media && <MediaView media={q.media} playing={model.mediaPlaying} active={playsMedia} />}
+        {q.media && !r?.media && <MediaView media={q.media} playing={model.mediaPlaying} active={playsMedia} />}
         {q.handout && <div className="display-handout">{q.handout}</div>}
         {q.text && <div className={`display-text ${revealed ? 'size-s' : textSizeClass(q.text)}`}>{q.text}</div>}
 
@@ -75,6 +75,7 @@ export function Display({ model, remainingMs, playsMedia }: Props) {
               </div>
             )}
             {r.comment && <div className="answer-extra">{r.comment}</div>}
+            {r.media && <MediaView media={r.media} playing={model.mediaPlaying} active={playsMedia} />}
             {(r.source || r.author) && (
               <div className="answer-meta">
                 {r.source && (

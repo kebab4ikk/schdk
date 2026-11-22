@@ -9,6 +9,8 @@ export interface Media {
 export interface Question {
   text: string;
   media?: Media;
+  /** Shown only after the answer is revealed (an illustration for the comment). */
+  answerMedia?: Media;
   handout?: string;
   answer: string;
   accepted?: string[];
@@ -17,6 +19,8 @@ export interface Question {
   author?: string;
   /** Seconds for discussion; overrides the game setting. */
   time?: number;
+  /** Instructions for the host only (pronunciation, how to read); never shown to players. */
+  hostNote?: string;
 }
 
 export interface Tour {
@@ -28,6 +32,8 @@ export interface Pack {
   title: string;
   author?: string;
   date?: string;
+  /** Instructions and preamble for the host; shown on the setup screen only. */
+  notes?: string;
   tours: Tour[];
 }
 

@@ -9,7 +9,7 @@ export const en: Record<MessageKey, string> = {
   'nav.results': 'Results',
 
   'setup.pack': 'Question pack',
-  'setup.loadPack': 'Load pack (.json or .zip)',
+  'setup.loadPack': 'Load pack (.json, .zip or .txt)',
   'setup.loading': 'Loading…',
   'setup.noPack': 'No pack loaded.',
   'setup.packInfo': '{tours} round(s), {questions} questions',
@@ -62,6 +62,9 @@ export const en: Record<MessageKey, string> = {
   'game.source': 'Source',
   'game.author': 'Author',
   'game.handout': 'Handout',
+  'game.answerMediaNote': 'Answer media — use “▶ Media” after revealing the answer.',
+  'game.hostNote': 'For the host (not shown to players)',
+  'setup.packNotes': 'Instructions and preamble for the host',
   'game.prev': '← Previous',
   'game.next': 'Next →',
   'game.start': 'Start',

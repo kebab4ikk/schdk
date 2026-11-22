@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDisplayModel } from './model';
+import { buildDisplayModel, forPlayers } from './model';
 import { initialState, reducer, type Action, type GameState } from '../game/state';
 import { flattenPack } from '../pack/types';
 import { validatePack } from '../pack/load';
@@ -10,7 +10,14 @@ const questions = flattenPack(
       {
         title: 'T1',
         questions: [
-          { text: 'Q1', answer: 'SECRET-1', comment: 'C1', handout: 'H1' },
+          {
+            text: 'Q1 [say: kyu-wan]',
+            answer: 'SECRET-1',
+            comment: 'C1',
+            handout: 'H1',
+            hostNote: 'NOTE-1',
+            answerMedia: { type: 'image', src: 'data:image/png;base64,SECRETIMG' },
+          },
           { text: 'Q2', answer: 'SECRET-2', accepted: ['ALT-2'] },
         ],
       },
@@ -36,7 +43,7 @@ describe('display model (what reaches the smartboard)', () => {
     for (const s of [at([]), at([{ type: 'startPause', now: 0 }]), at([{ type: 'skipTimer' }])]) {
       const m = json(s);
       expect(m).toContain('Q1');
-      for (const secret of ['SECRET-1', 'C1', 'Q2', 'SECRET-2', 'ALT-2']) expect(m).not.toContain(secret);
+      for (const secret of ['SECRET-1', 'C1', 'Q2', 'SECRET-2', 'ALT-2', 'SECRETIMG', 'NOTE-1', 'kyu-wan']) expect(m).not.toContain(secret);
     }
   });
 
@@ -44,6 +51,8 @@ describe('display model (what reaches the smartboard)', () => {
     const m = json(at([{ type: 'reveal' }]));
     expect(m).toContain('SECRET-1');
     expect(m).toContain('C1');
+    expect(m).toContain('SECRETIMG');
+    expect(m).not.toContain('NOTE-1');
     expect(m).not.toContain('SECRET-2');
   });
 
@@ -56,5 +65,10 @@ describe('display model (what reaches the smartboard)', () => {
     const s = at([{ type: 'startPause', now: 1000 }]);
     const m = buildDisplayModel(s, questions, 'P', undefined, 21_000);
     expect(m.timer).toEqual({ running: true, remainingMs: 40_000 });
+  });
+
+  it('strips reader hints in square brackets for players', () => {
+    expect(forPlayers('IT-фахівець [айті-фахівець] із Києва')).toBe('IT-фахівець із Києва');
+    expect(forPlayers('пісня «Shake it off» [Шейк іт оф], а')).toBe('пісня «Shake it off», а');
   });
 });

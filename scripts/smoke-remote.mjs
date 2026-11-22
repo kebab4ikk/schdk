@@ -49,7 +49,7 @@ zip.file(
   JSON.stringify({
     title: 'Remote test',
     questions: [
-      { text: 'Який напій відкрив пастух Калді?', answer: 'Кава' },
+      { text: 'Який напій відкрив пастух Калді? [Ка́лді]', answer: 'Кава', hostNote: 'Ведучим: читати повільно', answerMedia: { type: 'image', src: 'sq.png' } },
       { text: 'Що на картинці?', answer: 'Квадрат', media: { type: 'image', src: 'sq.png' } },
     ],
   }),
@@ -101,7 +101,9 @@ try {
     'board cannot send commands',
   );
   if ((await board.locator('body').innerText()).includes('Кава')) fail('answer on the board before reveal');
-  console.log('  ✓ no answer on the board before reveal');
+  if (await board.locator('img').count()) fail('answer image on the board before reveal');
+  if ((await board.locator('body').innerText()).includes('Ведучим')) fail('host note on the board');
+  console.log('  ✓ no answer, answer image or host note on the board before reveal');
 
   console.log('Timer and answer');
   await tablet.locator('body').click({ position: { x: 5, y: 400 } });
@@ -116,6 +118,11 @@ try {
   await tablet.keyboard.press('Enter');
   await board.locator('.answer-text').waitFor();
   expectEq(await board.locator('.answer-text').innerText(), 'Кава', 'answer shown on the board after reveal');
+  await board.waitForFunction(() => {
+    const i = document.querySelector('.display-answer img');
+    return i && i.complete && i.naturalWidth === 4;
+  });
+  console.log('  ✓ answer image shown on the board after reveal');
   await tablet.keyboard.press('1');
 
   console.log('Media');

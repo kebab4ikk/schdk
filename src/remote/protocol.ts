@@ -7,7 +7,8 @@
  *   GET  /display         → the same app in remote-screen mode, for the smartboard
  *   GET  /api/info        → InfoResponse; only from the tablet itself (loopback)
  *   POST /api/model       → body: RemotePayload; needs the X-Token header
- *   PUT  /api/media       → body: media bytes; needs X-Token; served at GET /api/media
+ *   PUT  /api/media?slot=q|a → body: media bytes; needs X-Token; served at GET /api/media?slot=…
+ *                            (q = the question's media, a = media shown with the answer)
  *   GET  /api/events      → server-sent events, `data:` = latest RemotePayload JSON
  */
 import type { DisplayModel } from '../display/model';

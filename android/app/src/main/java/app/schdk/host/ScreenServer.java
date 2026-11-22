@@ -35,7 +35,8 @@ import java.util.concurrent.TimeUnit;
  *   <li>GET / and /display: the web app (index.html)</li>
  *   <li>GET /api/info: token, links and screen count; only for the tablet itself (loopback)</li>
  *   <li>POST /api/model (X-Token): the latest players' view, relayed to every screen</li>
- *   <li>PUT /api/media (X-Token), GET /api/media: the current question's picture/audio/video</li>
+ *   <li>PUT /api/media?slot=q|a (X-Token), GET /api/media?slot=q|a: the current question's
+ *       picture/audio/video (q) and the illustration shown with the answer (a)</li>
  *   <li>GET /api/events: server-sent events carrying the players' view</li>
  * </ul>
  * The question pack never goes through here, only what players may see at that moment.
@@ -66,8 +67,9 @@ public final class ScreenServer {
 
     private volatile ServerSocket socket;
     private volatile String model; // latest RemotePayload JSON
-    private volatile byte[] media;
-    private volatile String mediaType = "application/octet-stream";
+    /** Media per slot: "q" = the question's, "a" = shown with the answer. */
+    private final Map<String, byte[]> media = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> mediaTypes = new java.util.concurrent.ConcurrentHashMap<>();
     private byte[] indexCache;
 
     public ScreenServer(Assets assets) {
@@ -264,8 +266,9 @@ public final class ScreenServer {
                     return;
                 }
                 String type = r.header("content-type");
-                mediaType = type == null || type.isEmpty() ? "application/octet-stream" : type;
-                media = body;
+                String slot = slot(r);
+                mediaTypes.put(slot, type == null || type.isEmpty() ? "application/octet-stream" : type);
+                media.put(slot, body);
                 sendText(out, 200, "ok");
                 return;
             }
@@ -358,8 +361,18 @@ public final class ScreenServer {
 
     // ---------------------------------------------------------------- responses
 
+    /** The ?slot= parameter: "a" for answer media, anything else is the question's ("q"). */
+    private static String slot(Request r) {
+        for (String kv : r.query.split("&")) {
+            if (kv.equals("slot=a")) return "a";
+        }
+        return "q";
+    }
+
     private void sendMedia(Request r, OutputStream out) throws IOException {
-        byte[] m = media;
+        String slot = slot(r);
+        byte[] m = media.get(slot);
+        String mediaType = mediaTypes.getOrDefault(slot, "application/octet-stream");
         if (m == null) {
             sendText(out, 404, "no media");
             return;

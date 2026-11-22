@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import type { Media, MediaType, Pack, Question, Tour } from './types';
+import { looksLikeChgkText, parseChgkText } from './chgkText';
 
 /** A validation problem, as an i18n key plus parameters, so the UI can show it in either language. */
 export interface PackIssue {
@@ -69,16 +70,21 @@ export function validatePack(raw: unknown, resolveMedia: (src: string) => string
       const answer = optStr(q.answer);
       if (!answer) issues.push({ key: 'err.noAnswer', params: { n: number } });
 
-      let media: Media | undefined;
-      if (q.media !== undefined && q.media !== null) {
-        if (!isObj(q.media) || !MEDIA_TYPES.includes(q.media.type as MediaType) || !optStr(q.media.src)) {
+      const parseMedia = (value: unknown): Media | undefined => {
+        if (value === undefined || value === null) return undefined;
+        if (!isObj(value) || !MEDIA_TYPES.includes(value.type as MediaType) || !optStr(value.src)) {
           issues.push({ key: 'err.badMedia', params: { n: number } });
-        } else {
-          const resolved = resolveMedia(q.media.src as string);
-          if (resolved === null) issues.push({ key: 'err.missingMedia', params: { n: number, src: q.media.src as string } });
-          else media = { type: q.media.type as MediaType, src: resolved };
+          return undefined;
         }
-      }
+        const resolved = resolveMedia(value.src as string);
+        if (resolved === null) {
+          issues.push({ key: 'err.missingMedia', params: { n: number, src: value.src as string } });
+          return undefined;
+        }
+        return { type: value.type as MediaType, src: resolved };
+      };
+      const media = parseMedia(q.media);
+      const answerMedia = parseMedia(q.answerMedia);
       if (!text && !media) issues.push({ key: 'err.emptyQuestion', params: { n: number } });
 
       let time: number | undefined;
@@ -99,6 +105,7 @@ export function validatePack(raw: unknown, resolveMedia: (src: string) => string
       questions.push({
         text,
         media,
+        answerMedia,
         handout: optStr(q.handout),
         answer: answer ?? '',
         accepted: accepted?.length ? accepted : undefined,
@@ -106,6 +113,7 @@ export function validatePack(raw: unknown, resolveMedia: (src: string) => string
         source: optStr(q.source),
         author: optStr(q.author),
         time,
+        hostNote: optStr(q.hostNote),
       });
     });
     tours.push({ title: optStr(t.title) ?? '', questions });
@@ -118,6 +126,7 @@ export function validatePack(raw: unknown, resolveMedia: (src: string) => string
     title: optStr(raw.title) ?? '',
     author: optStr(raw.author),
     date: optStr(raw.date),
+    notes: optStr(raw.notes),
     tours,
   };
 }
@@ -194,7 +203,8 @@ function validatePackShapeForMedia(raw: unknown): string[] {
   for (const t of tours) {
     if (!isObj(t) || !Array.isArray(t.questions)) continue;
     for (const q of t.questions) {
-      if (isObj(q) && isObj(q.media) && typeof q.media.src === 'string') out.push(q.media.src);
+      if (!isObj(q)) continue;
+      for (const m of [q.media, q.answerMedia]) if (isObj(m) && typeof m.src === 'string') out.push(m.src);
     }
   }
   return out;
@@ -212,7 +222,12 @@ export async function loadPackBytes(
 ): Promise<LoadedPack> {
   const bytes = new Uint8Array(data);
   if (isZipBytes(bytes)) return loadZip(bytes, createUrl);
-  const raw = parseJsonText(new TextDecoder('utf-8').decode(bytes));
+  const text = new TextDecoder('utf-8').decode(bytes);
+  // Not JSON: try the usual ЧГК text layout ("Запитання 1." / "Відповідь:" …).
+  if (!/^\uFEFF?\s*[[{]/.test(text) && looksLikeChgkText(text)) {
+    return { pack: validatePack(parseChgkText(text), () => null), objectUrls: [] };
+  }
+  const raw = parseJsonText(text);
   const pack = validatePack(raw, (src) => (/^(https?:|data:|blob:)/i.test(src) ? src : null));
   return { pack, objectUrls: [] };
 }

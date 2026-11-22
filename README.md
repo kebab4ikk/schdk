@@ -90,8 +90,31 @@
 | `accepted` | ні | Інші зараховані відповіді (список рядків). |
 | `comment`, `source`, `author`, `handout` | ні | Текст. |
 | `time` | ні | Секунди на обговорення саме цього питання (наприклад, 20 для бліцу). |
+| `answerMedia` | ні | Як `media`, але показується лише після відповіді (ілюстрація до коментаря). |
+| `hostNote` | ні | Вказівка для ведучого (вимова, як читати). Видно лише ведучому, на екран не потрапляє. |
+| `notes` (у корені пакета) | ні | Інструкція та преамбула для ведучого; видно на екрані налаштувань. |
+
+Текст у **квадратних дужках** у запитанні чи коментарі (`IT-спеціаліст [айті-спеціаліст]`) — підказка для того, хто читає вголос: ведучий її бачить, а на екрані гравців вона прибирається.
 
 Приклад: [`examples/sample-pack.json`](examples/sample-pack.json). Помилки в пакеті показуються з номером питання.
+
+### Текстовий пакет (.txt)
+Можна завантажити й звичайний текстовий файл у форматі, в якому редактори публікують пакети:
+
+```
+ТУР 1
+Запитання 1.
+[Ведучим: вказівка для ведучого]
+Текст запитання…
+Відповідь: …
+Залік: …
+Незалік: …
+Коментар: …
+Джерело: …
+Автор: …
+```
+
+Усе, що стоїть перед першим запитанням (інструкція, преамбула), стає нотатками для ведучого. Підходять і російські назви полів (Вопрос, Ответ, Зачёт…). Пакет у PDF спершу збережіть як текст (або скопіюйте текст у .txt); для пакетів із картинками є скрипт `scripts/text-to-pack.ts`, що робить ZIP: рядок `[[image: media/q7.jpg]]` після «Відповідь» додає ілюстрацію до відповіді.
 
 ---
 
@@ -110,6 +133,8 @@
 **Touch board (one screen):** on Setup, choose **Board mode (touch screen)**. The game runs full screen with large touch buttons (Start, Answer, Mark, Table, Next, and a ☰ menu). No answer is shown anywhere before you tap Answer (twice, if time isn't up yet), so keep the answers on paper or a phone.
 
 **Android tablet + board:** install `schdk-host.apk` from *Releases → android-latest* on the tablet. Put the tablet and the board on the same Wi-Fi (or connect the board to the tablet's hotspot), open the app, tap **Connect board** and open the shown address (e.g. `http://192.168.1.23:8765/display`) in the board's browser. Tap the board once to enable sound and full screen. The host runs the game on the tablet; the board only ever receives what players may see at that moment, never the pack. Keep the app open during the game.
+
+**Text packs:** a `.txt` file in the usual editor layout (`Запитання 1.` / `Відповідь:` / `Залік:` / `Коментар:` / `Джерело:` / `Автор:`, tours as `ТУР 1`) loads directly. Text before the first question becomes host notes; `[Ведучим: …]` becomes a host-only note; anything in square brackets is hidden from the players' screen. `answerMedia` is shown only after the answer is revealed.
 
 The game is saved automatically and survives a page reload. The interface language switches between Ukrainian and English in the top bar. The pack format is described above (fields are the same in both languages).
 

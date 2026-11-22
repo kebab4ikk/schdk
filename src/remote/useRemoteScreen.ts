@@ -23,7 +23,11 @@ const POLL_MS = 3000;
 export function useRemoteScreen(getModel: () => DisplayModel, lang: Lang, changeKey: unknown): RemoteScreen {
   const [info, setInfo] = useState<InfoResponse | null>(null);
   const token = info?.token;
-  const media = useRef<{ src: string | null; remote: string | null; seq: number }>({ src: null, remote: null, seq: 0 });
+  /** Upload state per slot: 'q' = question media, 'a' = answer media. */
+  const media = useRef<Record<Slot, { src: string | null; remote: string | null; seq: number }>>({
+    q: { src: null, remote: null, seq: 0 },
+    a: { src: null, remote: null, seq: 0 },
+  });
   const getModelRef = useRef(getModel);
   getModelRef.current = getModel;
   const langRef = useRef(lang);
@@ -32,28 +36,42 @@ export function useRemoteScreen(getModel: () => DisplayModel, lang: Lang, change
   const send = useCallback(async () => {
     if (!token) return;
     const model = getModelRef.current();
-    const m = media.current;
-    const src = model.question?.media?.src ?? null;
-    if (src !== m.src) {
-      // New question media: upload it, then send. Until it's up, the board shows no media.
-      m.src = src;
-      m.remote = null;
-      const seq = ++m.seq;
-      if (src && /^(blob:|data:)/.test(src)) {
-        void uploadMedia(src, token).then((ok) => {
-          if (ok && media.current.seq === seq) {
-            media.current.remote = `/api/media?v=${seq}`;
-            void send();
-          }
-        });
-      } else if (src) m.remote = src;
-    }
-    const remoteModel: DisplayModel =
-      model.question?.media && model.question.media.src === m.src
-        ? m.remote
-          ? { ...model, question: { ...model.question, media: { ...model.question.media, src: m.remote } } }
-          : { ...model, question: { ...model.question, media: undefined } }
-        : model;
+    const q = model.question;
+    // For each slot: a new local file (blob:/data:) is uploaded first; until it is up, the board
+    // gets no media for that slot. http(s) links are passed through as they are.
+    const remoteSrc = (slot: Slot, src: string | undefined): string | undefined => {
+      const m = media.current[slot];
+      const s = src ?? null;
+      if (s !== m.src) {
+        m.src = s;
+        m.remote = null;
+        const seq = ++m.seq;
+        if (s && /^(blob:|data:)/.test(s)) {
+          void uploadMedia(s, slot, token).then((ok) => {
+            const cur = media.current[slot];
+            if (ok && cur.seq === seq) {
+              cur.remote = `/api/media?slot=${slot}&v=${seq}`;
+              void send();
+            }
+          });
+        } else if (s) m.remote = s;
+      }
+      return m.remote ?? undefined;
+    };
+    const withSrc = <T extends { src: string }>(m: T | undefined, slot: Slot): T | undefined => {
+      const src = remoteSrc(slot, m?.src);
+      return m && src ? { ...m, src } : undefined;
+    };
+    const remoteModel: DisplayModel = q
+      ? {
+          ...model,
+          question: {
+            ...q,
+            media: withSrc(q.media, 'q'),
+            reveal: q.reveal && { ...q.reveal, media: withSrc(q.reveal.media, 'a') },
+          },
+        }
+      : model;
     const payload: RemotePayload = { model: remoteModel, lang: langRef.current };
     try {
       await fetch('/api/model', {
@@ -102,10 +120,12 @@ export function useRemoteScreen(getModel: () => DisplayModel, lang: Lang, change
   return { available: !!info, urls: info?.urls ?? [], displays: info?.displays ?? 0 };
 }
 
-async function uploadMedia(src: string, token: string): Promise<boolean> {
+type Slot = 'q' | 'a';
+
+async function uploadMedia(src: string, slot: Slot, token: string): Promise<boolean> {
   try {
     const blob = await (await fetch(src)).blob();
-    const res = await fetch('/api/media', {
+    const res = await fetch(`/api/media?slot=${slot}`, {
       method: 'PUT',
       headers: { 'Content-Type': blob.type || 'application/octet-stream', 'X-Token': token },
       body: blob,

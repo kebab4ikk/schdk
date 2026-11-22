@@ -7,7 +7,7 @@ export const uk = {
   'nav.results': 'Результати',
 
   'setup.pack': 'Пакет питань',
-  'setup.loadPack': 'Завантажити пакет (.json або .zip)',
+  'setup.loadPack': 'Завантажити пакет (.json, .zip або .txt)',
   'setup.loading': 'Завантаження…',
   'setup.noPack': 'Пакет не завантажено.',
   'setup.packInfo': '{tours} тур(и), {questions} питань',
@@ -60,6 +60,9 @@ export const uk = {
   'game.source': 'Джерело',
   'game.author': 'Автор',
   'game.handout': 'Роздатковий матеріал',
+  'game.answerMediaNote': 'Медіа до відповіді — кнопка «▶ Медіа» після показу відповіді.',
+  'game.hostNote': 'Для ведучого (не показується гравцям)',
+  'setup.packNotes': 'Інструкція та преамбула для ведучого',
   'game.prev': '← Попереднє',
   'game.next': 'Наступне →',
   'game.start': 'Старт',
