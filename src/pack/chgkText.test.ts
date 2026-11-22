@@ -91,6 +91,27 @@ describe('ЧГК text packs', () => {
     expect(flattenPack(p)).toHaveLength(3);
   });
 
+  it('drops an illustration caption before a picture, in any field', () => {
+    const t = `Запитання 1.
+Що це?
+Відповідь: кіт
+Коментар: Пояснення. Ілюстративний матеріал (якщо є можливість, можна просто показати
+дітям):
+[[image: a.png]]
+Джерело: https://example.org/x Ілюстрація:
+[[image: b.png]]
+Автор: Я`;
+    const [q] = flattenPack(validatePack(parseChgkText(t), (s) => s));
+    expect(q.comment).toBe('Пояснення.');
+    expect(q.answerMedia?.src).toBe('a.png');
+  });
+
+  it('joins a word hyphenated at the line end', () => {
+    expect(joinLines(['у будь-', 'якому порядку'])).toBe('у будь-якому порядку');
+    expect(joinLines(['IT-спеціаліст [айті-', 'спеціаліст]'])).toBe('IT-спеціаліст [айті-спеціаліст]');
+    expect(joinLines(['пауза -', 'далі'])).toBe('пауза - далі');
+  });
+
   it('glues URLs split at line ends but not ordinary text', () => {
     expect(joinLines(['see https://x.org/a-', 'b/c', 'and more'])).toBe('see https://x.org/a-b/c and more');
     expect(joinLines(['word', 'next'])).toBe('word next');

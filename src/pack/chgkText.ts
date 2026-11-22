@@ -42,7 +42,15 @@ interface Draft {
   fields: Partial<Record<Field, string[]>>;
   media?: { type: string; src: string };
   answerMedia?: { type: string; src: string };
+  /** Field (or the question text) that was being read when a picture appeared. */
+  captionField?: Field | 'text';
 }
+
+/**
+ * A caption like "Ілюстративний матеріал (якщо є можливість, можна показати):" right before a
+ * picture is an instruction to the host; the app shows the picture itself, so it is dropped.
+ */
+const CAPTION_RE = /\s*(?:Ілюстративний матеріал|Ілюстрація|Ілюстрації|Иллюстрация|Иллюстративный материал)(?=[\s(:])[^.!?]*:\s*$/iu;
 
 const MEDIA_LINE_RE = /^\s*\[\[\s*(image|audio|video)\s*:\s*([^\]]+?)\s*\]\]\s*$/i;
 
@@ -75,7 +83,9 @@ export function joinLines(lines: string[]): string {
     const inUrl = /^(https?:\/\/|www\.)\S*$/.test(lastToken) && !/[.,;)]$/.test(lastToken);
     // A wrapped address continues on a line that is one unbroken token ("your-garden/").
     const continuesUrl = inUrl && /^[\w\-./?=&%#~+:'’]+$/u.test(line);
-    out += continuesUrl ? line : ' ' + line;
+    // A word hyphenated at the line end ("будь-" / "якому") continues without a space.
+    const hyphenated = /[\p{L}\d]-$/u.test(out);
+    out += continuesUrl || hyphenated ? line : ' ' + line;
   }
   return out;
 }
@@ -138,6 +148,7 @@ export function parseChgkText(text: string): ParsedTextPack {
       const m = { type: media[1].toLowerCase(), src: media[2] };
       if (cur.fields.answer) cur.answerMedia ??= m;
       else cur.media ??= m;
+      cur.captionField ??= field ?? 'text';
       continue;
     }
     const l = labelOf(line);
@@ -180,14 +191,19 @@ function toQuestion(d: Draft): Record<string, unknown> {
     handout = h[1].trim();
     text = text.slice(h[0].length);
   }
-  const f = (k: Field) => (d.fields[k] ? joinLines(d.fields[k]!) : undefined);
+  const f = (k: Field) => {
+    if (!d.fields[k]) return undefined;
+    const v = joinLines(d.fields[k]!);
+    return (d.captionField === k ? v.replace(CAPTION_RE, '') : v) || undefined;
+  };
+  if (d.captionField === 'text') text = text.replace(CAPTION_RE, '');
   const comment = [f('comment'), f('rejected') && `Незалік: ${f('rejected')}`].filter(Boolean).join('\n') || undefined;
   return {
     text: text.trim(),
     answer: f('answer')?.replace(/\.$/, '') ?? '',
     accepted: f('accepted') ? [f('accepted')!.replace(/\.$/, '')] : undefined,
     comment,
-    source: d.fields.source ? joinListField(d.fields.source) : undefined,
+    source: d.fields.source ? (d.captionField === 'source' ? joinListField(d.fields.source).replace(CAPTION_RE, '') : joinListField(d.fields.source)) || undefined : undefined,
     author: f('author'),
     handout,
     hostNote: notes.length ? notes.join('\n') : undefined,
