@@ -13,6 +13,7 @@ const questions = flattenPack(
           {
             text: 'Q1 [say: kyu-wan]',
             answer: 'SECRET-1',
+            accepted: ['ZALIK-1'],
             comment: 'C1',
             handout: 'H1',
             hostNote: 'NOTE-1',
@@ -52,6 +53,7 @@ describe('display model (what reaches the smartboard)', () => {
     expect(m).toContain('SECRET-1');
     expect(m).toContain('C1');
     expect(m).toContain('SECRETIMG');
+    expect(m).not.toContain('ZALIK-1'); // accepted answers are for the host only
     expect(m).not.toContain('NOTE-1');
     expect(m).not.toContain('SECRET-2');
   });

@@ -69,11 +69,6 @@ export function Display({ model, remainingMs, playsMedia }: Props) {
           <section className="display-answer">
             <div className="answer-label">{t('game.answer')}</div>
             <div className="answer-text">{r.answer}</div>
-            {r.accepted && (
-              <div className="answer-extra">
-                <b>{t('game.accepted')}:</b> {r.accepted.join('; ')}
-              </div>
-            )}
             {r.comment && <div className="answer-extra">{r.comment}</div>}
             {r.media && <MediaView media={r.media} playing={model.mediaPlaying} active={playsMedia} />}
             {(r.source || r.author) && (

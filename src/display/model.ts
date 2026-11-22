@@ -19,7 +19,6 @@ export interface DisplayModel {
     /** Present only once the answer is revealed. */
     reveal?: {
       answer: string;
-      accepted?: string[];
       comment?: string;
       source?: string;
       author?: string;
@@ -72,8 +71,8 @@ export function buildDisplayModel(
       media: q.media && { type: q.media.type, src: q.media.src },
       reveal: revealed
         ? {
+            // "Залік" (other accepted answers) is for the host's checking only, never for players.
             answer: forPlayers(q.answer),
-            accepted: q.accepted?.map((a) => forPlayers(a)),
             comment: forPlayers(q.comment),
             source: q.source,
             author: q.author,
