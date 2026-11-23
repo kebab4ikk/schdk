@@ -119,6 +119,15 @@
 
 ---
 
+## Генерування запитань (Claude Code)
+
+У репозиторії є навичка для Claude Code `/chgk-questions` ([`.claude/skills/chgk-questions`](.claude/skills/chgk-questions/SKILL.md)): вона пише оригінальні запитання у стилі синхронних турнірів на задані теми, перевіряє кожен факт за джерелами в інтернеті й зберігає пакет у `packs/*.txt`, який застосунок відкриває напряму. Приклад: `/chgk-questions космос, винаходи; 12; школярі`.
+
+- Потрібен доступ до інтернету (перевірка фактів). Факти, які не вдалося перевірити, не потрапляють у пакет.
+- Запитання з чужих пакетів не копіюються. Для перевірки на повтор навичка дає посилання на пошук questions.com.ua — сам сайт вона не читає: його умови забороняють копіювання й збирання запитань.
+- Папка `packs/` не потрапляє в git: ваші пакети лишаються приватними.
+- Це чернетки: перед грою їх має прочитати редактор.
+
 ## English
 
 ### Running
@@ -138,6 +147,8 @@
 **Text and .odt packs:** an `.odt` document (LibreOffice / Google Docs) or a `.txt` file in the usual editor layout (`Запитання 1.` / `Відповідь:` / `Залік:` / `Коментар:` / `Джерело:` / `Автор:`, tours as `ТУР 1`) loads directly. Text before the first question becomes host notes; `[Ведучим: …]` becomes a host-only note; anything in square brackets is hidden from the players' screen. Pictures in an `.odt` are picked up; one placed after the `Відповідь` line is shown only with the answer (`answerMedia`).
 
 The game is saved automatically and survives a page reload. The interface language switches between Ukrainian and English in the top bar. The pack format is described above (fields are the same in both languages).
+
+**Writing questions:** the Claude Code skill `/chgk-questions` (`.claude/skills/chgk-questions/`) drafts original questions on given themes in the synchronous-tournament style, verifies each fact against web sources it actually opens, and saves a `.txt` pack to the git-ignored `packs/` folder for the app. It needs web access, never copies questions from existing packs, and only links to questions.com.ua searches for repeat checks (the site's terms forbid copying or collecting its questions).
 
 ### Development
 - `npm test` — unit tests (pack loading, timer state machine, scoring).

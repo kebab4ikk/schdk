@@ -1,3 +1,7 @@
 node_modules/
 smoke-output/
 *.log
+
+# Question packs stay private (see .claude/skills/chgk-questions)
+packs/*
+!packs/.gitkeep
